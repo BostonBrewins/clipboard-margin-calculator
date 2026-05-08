@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard Margin Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Hide the default number input spinners for a cleaner look */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        .input-transition {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans antialiased text-slate-800">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header -->
+        <div class="bg-blue-900 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold tracking-tight">Clipboard Margin Calculator</h1>
+            <p class="text-blue-200 text-sm mt-1">Fill out any two fields to calculate the third.</p>
+        </div>
+
+        <!-- Form Body -->
+        <div class="p-6 space-y-6">
+            
+            <!-- Charge Field -->
+            <div class="relative">
+                <label for="charge" class="block text-sm font-semibold text-slate-600 mb-1">Charge</label>
+                <div class="relative rounded-lg shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-medium">$</span>
+                    </div>
+                    <input type="number" name="charge" id="charge" step="0.01" placeholder="0.00"
+                        class="input-transition block w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none">
+                </div>
+            </div>
+
+            <!-- Pay Field -->
+            <div class="relative">
+                <label for="pay" class="block text-sm font-semibold text-slate-600 mb-1">Pay</label>
+                <div class="relative rounded-lg shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-medium">$</span>
+                    </div>
+                    <input type="number" name="pay" id="pay" step="0.01" placeholder="0.00"
+                        class="input-transition block w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-lg text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none">
+                </div>
+            </div>
+
+            <div class="relative py-2 flex items-center">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-semibold">Results in</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <!-- Margin Field -->
+            <div class="relative">
+                <label for="margin" class="block text-sm font-semibold text-slate-600 mb-1">Margin</label>
+                <div class="relative rounded-lg shadow-sm">
+                    <input type="number" name="margin" id="margin" step="0.01" placeholder="0.00"
+                        class="input-transition block w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg text-lg text-slate-800 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white outline-none">
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-medium">%</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-slate-50 p-4 border-t border-slate-100 text-right">
+            <button id="clearBtn" class="text-sm font-medium text-slate-500 hover:text-slate-700 px-4 py-2 rounded-md transition-colors hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300">
+                Clear All
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const chargeEl = document.getElementById('charge');
+        const payEl = document.getElementById('pay');
+        const marginEl = document.getElementById('margin');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // We use an array to track the last two fields the user interacted with
+        let editHistory = [];
+
+        function updateHistory(fieldId) {
+            // If the field isn't the most recently edited one, add it to history
+            if (editHistory[editHistory.length - 1] !== fieldId) {
+                editHistory.push(fieldId);
+                // Keep only the last two interacted fields
+                if (editHistory.length > 2) {
+                    editHistory.shift();
+                }
+            }
+        }
+
+        function calculate() {
+            // We need exactly two uniquely edited fields to calculate the third
+            if (editHistory.length < 2) return;
+
+            const fields = ['charge', 'pay', 'margin'];
+            // Find the one field that isn't in our interaction history
+            const fieldToCalculate = fields.find(f => !editHistory.includes(f));
+
+            const charge = parseFloat(chargeEl.value);
+            const pay = parseFloat(payEl.value);
+            const margin = parseFloat(marginEl.value);
+
+            // Execute the appropriate mathematical formula
+            if (fieldToCalculate === 'margin') {
+                if (!isNaN(charge) && !isNaN(pay) && charge !== 0) {
+                    const m = ((charge - pay) / charge) * 100;
+                    marginEl.value = m.toFixed(2);
+                } else {
+                    marginEl.value = '';
+                }
+            } else if (fieldToCalculate === 'pay') {
+                if (!isNaN(charge) && !isNaN(margin)) {
+                    const p = charge * (1 - (margin / 100));
+                    payEl.value = p.toFixed(2);
+                } else {
+                    payEl.value = '';
+                }
+            } else if (fieldToCalculate === 'charge') {
+                if (!isNaN(pay) && !isNaN(margin) && margin !== 100) {
+                    const c = pay / (1 - (margin / 100));
+                    chargeEl.value = c.toFixed(2);
+                } else {
+                    chargeEl.value = '';
+                }
+            }
+        }
+
+        // Add event listeners to all inputs
+        [chargeEl, payEl, marginEl].forEach(el => {
+            el.addEventListener('input', (e) => {
+                // Ignore empty inputs when determining history to avoid weird bugs
+                if (e.target.value !== '') {
+                    updateHistory(e.target.id);
+                    calculate();
+                }
+            });
+            
+            // Also track focus to set context in case they click without typing immediately
+            el.addEventListener('focus', (e) => {
+                 if (e.target.value !== '') {
+                    updateHistory(e.target.id);
+                }
+            })
+        });
+
+        // Clear functionality
+        clearBtn.addEventListener('click', () => {
+            chargeEl.value = '';
+            payEl.value = '';
+            marginEl.value = '';
+            editHistory = [];
+        });
+    </script>
+</body>
+</html>
